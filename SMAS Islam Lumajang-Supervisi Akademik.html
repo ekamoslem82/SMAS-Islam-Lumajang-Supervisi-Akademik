@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Program Supervisi Akademik - SMAS Islam Lumajang</title>
+<style>
+:root{--primary:#174a3b;--secondary:#d7b56d;--bg:#f4f7f5;--card:#fff;--text:#20302a;--muted:#6d7a75;--danger:#b33a3a}
+*{box-sizing:border-box} body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:245px;background:linear-gradient(180deg,#123f33,#0c3027);color:#fff;padding:22px 15px;z-index:5}
+.brand{font-weight:700;font-size:18px;line-height:1.35;padding:8px 10px 24px;border-bottom:1px solid #ffffff22}.brand small{display:block;font-weight:400;font-size:12px;color:#cfe2da;margin-top:5px}
+.nav{margin-top:18px}.nav button{width:100%;border:0;background:transparent;color:#dcebe5;text-align:left;padding:12px 13px;margin:3px 0;border-radius:9px;cursor:pointer;font-size:14px}.nav button.active,.nav button:hover{background:#ffffff18;color:#fff}
+.main{margin-left:245px;padding:25px;max-width:1500px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}.top h1{margin:0;font-size:25px}.top p{margin:5px 0 0;color:var(--muted)}
+.card{background:var(--card);border-radius:14px;padding:19px;box-shadow:0 4px 18px #173f3210;margin-bottom:18px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.stat{border-left:4px solid var(--secondary)}.stat .num{font-size:29px;font-weight:700;color:var(--primary)}.stat .label{font-size:13px;color:var(--muted);margin-top:4px}
+.section{display:none}.section.active{display:block}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+button,.btn{background:var(--primary);color:#fff;border:0;padding:10px 14px;border-radius:8px;cursor:pointer;font-size:13px}.btn.secondary{background:#e8eeeB;color:var(--primary)}.btn.gold{background:#9b7635}.btn.danger{background:var(--danger)}
+input,select,textarea{width:100%;padding:10px 11px;border:1px solid #d6dfda;border-radius:8px;background:#fff;font:inherit}textarea{min-height:75px;resize:vertical}label{font-size:12px;font-weight:600;color:#53615b;display:block;margin-bottom:5px}.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}.full{grid-column:1/-1}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 9px;border-bottom:1px solid #e7ece9;text-align:left;vertical-align:top}th{background:#f0f5f2;color:#315448} .pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#e8f2ee;color:#27634f;font-size:11px}
+.notice{padding:12px 14px;background:#fff8e8;border-left:4px solid var(--secondary);border-radius:7px;font-size:13px}
+.modal{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;z-index:10;padding:20px}.modal.show{display:flex}.modalbox{background:#fff;width:min(900px,100%);max-height:90vh;overflow:auto;border-radius:14px;padding:22px}.modalhead{display:flex;justify-content:space-between;align-items:center}.modalhead h2{margin:0}
+.scorebox{font-size:23px;font-weight:700;color:var(--primary);padding:15px;background:#eef5f1;border-radius:10px}.rubric td:first-child{width:48%}.rubric select{min-width:150px}
+.empty{text-align:center;color:var(--muted);padding:25px}
+@media(max-width:900px){.sidebar{width:70px;padding:15px 8px}.brand{font-size:0}.brand:before{content:"SA";font-size:20px}.brand small{display:none}.nav button{font-size:0;text-align:center}.nav button:before{content:"•";font-size:20px}.main{margin-left:70px;padding:16px}.grid{grid-template-columns:repeat(2,1fr)}.formgrid{grid-template-columns:1fr}}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.top{display:block}.top .btn{margin-top:10px}table{font-size:12px}}
+@media print{.sidebar,.toolbar,.no-print{display:none!important}.main{margin:0;padding:0}.section{display:none!important}.section.printable{display:block!important}.card{box-shadow:none;border:0}}
+</style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="brand">SUPERVISI AKADEMIK<small>SMAS Islam Lumajang</small></div>
+  <div class="nav">
+    <button class="active" onclick="show('dashboard',this)">Dashboard</button>
+    <button onclick="show('guru',this)">Data Guru</button>
+    <button onclick="show('jadwal',this)">Jadwal Supervisi</button>
+    <button onclick="show('instrumen',this)">Instrumen Penilaian</button>
+    <button onclick="show('hasil',this)">Hasil Supervisi</button>
+    <button onclick="show('rekap',this)">Rekapitulasi</button>
+    <button onclick="show('laporan',this)">Laporan</button>
+  </div>
+</aside>
+
+<main class="main">
+<header class="top">
+ <div><h1 id="pageTitle">Dashboard Supervisi Akademik</h1><p>Program Supervisi Akademik • SMAS Islam Lumajang • TP 2026/2027</p></div>
+ <div style="display:flex;gap:8px"><button class="btn gold" onclick="backup()">Backup Data</button><button class="btn danger" onclick="resetData()">Reset Data</button></div>
+</header>
+
+<section id="dashboard" class="section active">
+ <div class="grid">
+  <div class="card stat"><div class="num" id="sGuru">0</div><div class="label">Guru Terdaftar</div></div>
+  <div class="card stat"><div class="num" id="sJadwal">0</div><div class="label">Jadwal Supervisi</div></div>
+  <div class="card stat"><div class="num" id="sHasil">0</div><div class="label">Hasil Penilaian</div></div>
+  <div class="card stat"><div class="num" id="sAvg">0</div><div class="label">Rata-rata Nilai</div></div>
+ </div>
+ <div class="card">
+  <h3>Alur Program Supervisi</h3>
+  <div class="notice">Perencanaan → Penjadwalan → Observasi Pembelajaran → Penilaian → Analisis → Tindak Lanjut → Laporan.</div>
+ </div>
+ <div class="card"><h3>Hasil Terbaru</h3><div id="latest"></div></div>
+</section>
+
+<section id="guru" class="section">
+ <div class="card"><div class="toolbar"><button onclick="openGuru()">+ Tambah Guru</button><button class="btn secondary" onclick="document.getElementById('fileGuru').click()">📥 Upload Excel</button><button class="btn secondary" onclick="downloadTemplate('guru')">📄 Template Excel</button><button class="btn secondary" onclick="exportCSV('guru')">Ekspor CSV</button><input id="fileGuru" type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="uploadExcel('guru',this)"></div><div class="notice" style="margin-bottom:14px">Format kolom: <b>Nama, NIP/NUPTK, Mapel, Kelas</b>. Baris pertama dianggap sebagai judul kolom.</div><div id="guruTable"></div></div>
+</section>
+
+<section id="jadwal" class="section">
+ <div class="card"><div class="toolbar"><button onclick="openJadwal()">+ Jadwalkan Supervisi</button><button class="btn secondary" onclick="document.getElementById('fileJadwal').click()">📥 Upload Excel</button><button class="btn secondary" onclick="downloadTemplate('jadwal')">📄 Template Excel</button><input id="fileJadwal" type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="uploadExcel('jadwal',this)"></div><div class="notice" style="margin-bottom:14px">Format kolom: <b>Guru, Tanggal, Jam, Kelas, Materi/Topik, Status</b>. Nama Guru harus sudah ada di Data Guru.</div><div id="jadwalTable"></div></div>
+</section>
+
+<section id="instrumen" class="section">
+ <div class="card">
+  <h3>Instrumen Supervisi Akademik</h3>
+  <p style="color:var(--muted)">Skala: 1 = perlu bimbingan, 2 = cukup, 3 = baik, 4 = sangat baik. Nilai akhir dihitung otomatis.</p>
+  <table class="rubric"><thead><tr><th>Komponen / Indikator</th><th>Skor</th></tr></thead><tbody id="instrumentRows"></tbody></table>
+ </div>
+</section>
+
+<section id="hasil" class="section">
+ <div class="card"><div class="toolbar"><button onclick="openHasil()">+ Input Hasil Supervisi</button><button class="btn secondary" onclick="document.getElementById('fileHasil').click()">📥 Upload Excel</button><button class="btn secondary" onclick="downloadTemplate('hasil')">📄 Template Excel</button><input id="fileHasil" type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="uploadExcel('hasil',this)"></div><div class="notice" style="margin-bottom:14px">Format kolom: <b>Guru, Tanggal, Catatan</b> + <b>13 kolom skor indikator</b>. Skor setiap indikator harus 1–4.</div><div id="hasilTable"></div></div>
+</section>
+
+<section id="rekap" class="section">
+ <div class="card"><h3>Rekapitulasi Hasil Supervisi</h3><div id="rekapTable"></div></div>
+</section>
+
+<section id="laporan" class="section">
+ <div class="card no-print"><div class="toolbar"><button onclick="printReport()">Cetak Laporan</button><button class="btn secondary" onclick="exportCSV('hasil')">Ekspor Hasil CSV</button></div></div>
+ <div class="card" id="report"><h2 style="text-align:center;margin-bottom:4px">LAPORAN HASIL SUPERVISI AKADEMIK</h2><h3 style="text-align:center;margin-top:0">SMAS ISLAM LUMAJANG</h3><p style="text-align:center">Tahun Pelajaran 2026/2027</p><hr><div id="reportBody"></div></div>
+</section>
+</main>
+
+<div class="modal" id="modal"><div class="modalbox"><div class="modalhead"><h2 id="modalTitle"></h2><button class="btn danger" onclick="closeModal()">×</button></div><div id="modalBody"></div></div></div>
+
+<script>
+const KEY='supervisi_smas_islam_lumajang_v1';
+let db=JSON.parse(localStorage.getItem(KEY)||'{"guru":[],"jadwal":[],"hasil":[]}');
+const indicators=[
+ ['A. Perencanaan Pembelajaran','Kelengkapan dan kesesuaian perangkat/perencanaan pembelajaran'],
+ ['A. Perencanaan Pembelajaran','Tujuan pembelajaran dirumuskan jelas dan terukur'],
+ ['A. Perencanaan Pembelajaran','Kegiatan pembelajaran sesuai karakteristik peserta didik'],
+ ['B. Pelaksanaan Pembelajaran','Kegiatan pendahuluan, inti, dan penutup terlaksana efektif'],
+ ['B. Pelaksanaan Pembelajaran','Penguasaan materi dan keterkaitan dengan konteks'],
+ ['B. Pelaksanaan Pembelajaran','Strategi/metode/model pembelajaran sesuai tujuan'],
+ ['B. Pelaksanaan Pembelajaran','Pemanfaatan media dan sumber belajar'],
+ ['B. Pelaksanaan Pembelajaran','Interaksi, komunikasi, dan keterlibatan peserta didik'],
+ ['B. Pelaksanaan Pembelajaran','Pengelolaan kelas dan suasana belajar'],
+ ['C. Asesmen Pembelajaran','Asesmen digunakan untuk mengetahui pencapaian belajar'],
+ ['C. Asesmen Pembelajaran','Umpan balik diberikan untuk perbaikan pembelajaran'],
+ ['D. Refleksi dan Tindak Lanjut','Guru melakukan refleksi terhadap proses pembelajaran'],
+ ['D. Refleksi dan Tindak Lanjut','Ada tindak lanjut berdasarkan hasil asesmen/refleksi']
+];
+function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function show(id,btn){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');document.getElementById('pageTitle').textContent=btn.textContent}
+function openModal(title,body){modalTitle.textContent=title;modalBody.innerHTML=body;modal.classList.add('show')}
+function closeModal(){modal.classList.remove('show')}
+function guruOptions(){return [...db.guru].sort((a,b)=>a.nama.localeCompare(b.nama,'id',{sensitivity:'base'})).map(g=>`<option value="${g.id}">${esc(g.nama)} — ${esc(g.mapel)}</option>`).join('')}
+function openGuru(){
+openModal('Tambah Data Guru',`<div class="formgrid"><div><label>Nama Guru</label><input id="gNama"></div><div><label>NIP/NUPTK (opsional)</label><input id="gNip"></div><div><label>Mata Pelajaran</label><input id="gMapel"></div><div><label>Kelas</label><input id="gKelas"></div></div><br><button onclick="addGuru()">Simpan</button>`)
+}
+function addGuru(){let nama=gNama.value.trim(),mapel=gMapel.value.trim();if(!nama||!mapel)return alert('Nama guru dan mata pelajaran wajib diisi.');db.guru.push({id:Date.now(),nama,nip:gNip.value,mapel,kelas:gKelas.value});save();closeModal()}
+function delGuru(id){if(confirm('Hapus data guru?')){db.guru=db.guru.filter(x=>x.id!=id);save()}}
+function openJadwal(){
+if(!db.guru.length)return alert('Tambahkan data guru terlebih dahulu.');
+openModal('Jadwal Supervisi',`<div class="formgrid"><div><label>Guru</label><select id="jGuru">${guruOptions()}</select></div><div><label>Tanggal</label><input type="date" id="jTanggal"></div><div><label>Jam</label><input type="time" id="jJam"></div><div><label>Kelas</label><input id="jKelas"></div><div class="full"><label>Materi/Topik</label><input id="jMateri"></div></div><br><button onclick="addJadwal()">Simpan Jadwal</button>`)
+}
+function addJadwal(){if(!jTanggal.value)return alert('Tanggal wajib diisi.');db.jadwal.push({id:Date.now(),guru:+jGuru.value,tanggal:jTanggal.value,jam:jJam.value,kelas:jKelas.value,materi:jMateri.value,status:'Terjadwal'});save();closeModal()}
+function delJadwal(id){if(confirm('Hapus jadwal?')){db.jadwal=db.jadwal.filter(x=>x.id!=id);save()}}
+function openHasil(){
+if(!db.guru.length)return alert('Tambahkan data guru terlebih dahulu.');
+let rows=indicators.map((x,i)=>`<tr><td><b>${x[0]}</b><br>${x[1]}</td><td><select class="score" data-i="${i}"><option value="">-</option><option>1</option><option>2</option><option>3</option><option>4</option></select></td></tr>`).join('');
+openModal('Input Hasil Supervisi',`<div class="formgrid"><div><label>Guru</label><select id="hGuru">${guruOptions()}</select></div><div><label>Tanggal Observasi</label><input type="date" id="hTanggal" value="${new Date().toISOString().slice(0,10)}"></div><div class="full"><label>Catatan / Temuan</label><textarea id="hCatatan"></textarea></div></div><hr><table class="rubric"><thead><tr><th>Indikator</th><th>Skor</th></tr></thead><tbody>${rows}</tbody></table><br><div class="scorebox">Nilai sementara: <span id="liveScore">0</span></div><br><button onclick="addHasil()">Simpan Hasil Supervisi</button>`);
+document.querySelectorAll('.score').forEach(s=>s.onchange=calcLive);calcLive()
+}
+function calcLive(){let a=[...document.querySelectorAll('.score')].map(x=>+x.value).filter(Boolean);let n=a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length*25*100)/100:0;document.getElementById('liveScore').textContent=n}
+function category(n){return n>=90?'Sangat Baik':n>=76?'Baik':n>=61?'Cukup':'Perlu Bimbingan'}
+function addHasil(){let scores=[...document.querySelectorAll('.score')].map(x=>+x.value);if(scores.some(x=>!x))return alert('Semua indikator harus diberi skor.');let avg=scores.reduce((a,b)=>a+b,0)/scores.length;let nilai=Math.round(avg*25*100)/100;db.hasil.push({id:Date.now(),guru:+hGuru.value,tanggal:hTanggal.value,scores, nilai, kategori:category(nilai),catatan:hCatatan.value});let j=db.jadwal.find(x=>x.guru==+hGuru.value&&x.tanggal==hTanggal.value);if(j)j.status='Selesai';save();closeModal()}
+function guruName(id){return db.guru.find(x=>x.id==id)?.nama||'Guru dihapus'}
+
+function editGuru(id){
+ let g=db.guru.find(x=>x.id==id); if(!g)return;
+ openModal('Edit Data Guru',`<div class="formgrid"><div><label>Nama Guru</label><input id="gNama" value="${esc(g.nama)}"></div><div><label>NIP/NUPTK (opsional)</label><input id="gNip" value="${esc(g.nip)}"></div><div><label>Mata Pelajaran</label><input id="gMapel" value="${esc(g.mapel)}"></div><div><label>Kelas</label><input id="gKelas" value="${esc(g.kelas)}"></div></div><br><button onclick="updateGuru(${id})">Simpan Perubahan</button>`);
+}
+function updateGuru(id){
+ let g=db.guru.find(x=>x.id==id),nama=gNama.value.trim(),mapel=gMapel.value.trim();
+ if(!nama||!mapel)return alert('Nama guru dan mata pelajaran wajib diisi.');
+ g.nama=nama;g.nip=gNip.value;g.mapel=mapel;g.kelas=gKelas.value;save();closeModal();
+}
+function editJadwal(id){
+ let j=db.jadwal.find(x=>x.id==id); if(!j)return;
+ openModal('Edit Jadwal Supervisi',`<div class="formgrid"><div><label>Guru</label><select id="jGuru">${guruOptions()}</select></div><div><label>Tanggal</label><input type="date" id="jTanggal" value="${j.tanggal}"></div><div><label>Jam</label><input type="time" id="jJam" value="${j.jam||''}"></div><div><label>Kelas</label><input id="jKelas" value="${esc(j.kelas||'')}"></div><div class="full"><label>Materi/Topik</label><input id="jMateri" value="${esc(j.materi||'')}"></div><div><label>Status</label><select id="jStatus"><option ${j.status==='Terjadwal'?'selected':''}>Terjadwal</option><option ${j.status==='Selesai'?'selected':''}>Selesai</option></select></div></div><br><button onclick="updateJadwal(${id})">Simpan Perubahan</button>`);
+ jGuru.value=j.guru;
+}
+function updateJadwal(id){
+ let j=db.jadwal.find(x=>x.id==id); if(!j)return;
+ if(!jTanggal.value)return alert('Tanggal wajib diisi.');
+ j.guru=+jGuru.value;j.tanggal=jTanggal.value;j.jam=jJam.value;j.kelas=jKelas.value;j.materi=jMateri.value;j.status=jStatus.value;save();closeModal();
+}
+function editHasil(id){
+ let h=db.hasil.find(x=>x.id==id); if(!h)return;
+ let rows=indicators.map((x,i)=>`<tr><td><b>${x[0]}</b><br>${x[1]}</td><td><select class="score" data-i="${i}"><option value="">-</option><option ${h.scores[i]==1?'selected':''}>1</option><option ${h.scores[i]==2?'selected':''}>2</option><option ${h.scores[i]==3?'selected':''}>3</option><option ${h.scores[i]==4?'selected':''}>4</option></select></td></tr>`).join('');
+ openModal('Edit Hasil Supervisi',`<div class="formgrid"><div><label>Guru</label><select id="hGuru">${guruOptions()}</select></div><div><label>Tanggal Observasi</label><input type="date" id="hTanggal" value="${h.tanggal}"></div><div class="full"><label>Catatan / Temuan</label><textarea id="hCatatan">${esc(h.catatan||'')}</textarea></div></div><hr><table class="rubric"><thead><tr><th>Indikator</th><th>Skor</th></tr></thead><tbody>${rows}</tbody></table><br><div class="scorebox">Nilai sementara: <span id="liveScore">0</span></div><br><button onclick="updateHasil(${id})">Simpan Perubahan</button>`);
+ hGuru.value=h.guru;document.querySelectorAll('.score').forEach(x=>x.onchange=calcLive);calcLive();
+}
+function updateHasil(id){
+ let h=db.hasil.find(x=>x.id==id); if(!h)return;
+ let scores=[...document.querySelectorAll('.score')].map(x=>+x.value);
+ if(scores.some(x=>!x))return alert('Semua indikator harus diberi skor.');
+ let avg=scores.reduce((a,b)=>a+b,0)/scores.length,nilai=Math.round(avg*25*100)/100;
+ h.guru=+hGuru.value;h.tanggal=hTanggal.value;h.scores=scores;h.nilai=nilai;h.kategori=category(nilai);h.catatan=hCatatan.value;
+ let j=db.jadwal.find(x=>x.guru==h.guru&&x.tanggal==h.tanggal);if(j)j.status='Selesai';
+ save();closeModal();
+}
+function delHasil(id){if(confirm('Hapus hasil supervisi ini?')){db.hasil=db.hasil.filter(x=>x.id!=id);save()}}
+function resetData(){
+ if(!confirm('PERINGATAN: Semua data guru, jadwal, dan hasil supervisi akan dihapus. Lanjutkan?'))return;
+ if(!confirm('Konfirmasi terakhir: data tidak dapat dikembalikan kecuali sudah dibackup. Reset sekarang?'))return;
+ db={guru:[],jadwal:[],hasil:[]};save();alert('Semua data berhasil direset.');
+}
+function renderGuru(){guruTable.innerHTML=db.guru.length?`<table><thead><tr><th>No</th><th>Nama</th><th>NIP/NUPTK</th><th>Mapel</th><th>Kelas</th><th>Aksi</th></tr></thead><tbody>${[...db.guru].sort((a,b)=>a.nama.localeCompare(b.nama,'id',{sensitivity:'base'})).map((g,i)=>`<tr><td>${i+1}</td><td><b>${esc(g.nama)}</b></td><td>${esc(g.nip)}</td><td>${esc(g.mapel)}</td><td>${esc(g.kelas)}</td><td><button onclick="editGuru(${g.id})">Edit</button> <button class="btn danger" onclick="delGuru(${g.id})">Hapus</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty">Belum ada data guru.</div>'}
+function renderJadwal(){jadwalTable.innerHTML=db.jadwal.length?`<table><thead><tr><th>Tanggal</th><th>Guru</th><th>Jam</th><th>Kelas</th><th>Materi</th><th>Status</th><th>Aksi</th></tr></thead><tbody>${[...db.jadwal].sort((a,b)=>a.tanggal.localeCompare(b.tanggal)).map(j=>`<tr><td>${j.tanggal}</td><td>${esc(guruName(j.guru))}</td><td>${j.jam||'-'}</td><td>${esc(j.kelas)}</td><td>${esc(j.materi)}</td><td><span class="pill">${j.status}</span></td><td><button onclick="editJadwal(${j.id})">Edit</button> <button class="btn danger" onclick="delJadwal(${j.id})">Hapus</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty">Belum ada jadwal.</div>'}
+function renderHasil(){hasilTable.innerHTML=db.hasil.length?`<table><thead><tr><th>Tanggal</th><th>Guru</th><th>Nilai</th><th>Kategori</th><th>Catatan</th><th>Aksi</th></tr></thead><tbody>${[...db.hasil].reverse().map(h=>`<tr><td>${h.tanggal}</td><td><b>${esc(guruName(h.guru))}</b></td><td><b>${h.nilai}</b></td><td><span class="pill">${h.kategori}</span></td><td>${esc(h.catatan)}</td><td><button onclick="editHasil(${h.id})">Edit</button> <button class="btn danger" onclick="delHasil(${h.id})">Hapus</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty">Belum ada hasil supervisi.</div>'}
+function renderRekap(){let rows=db.guru.map(g=>{let a=db.hasil.filter(h=>h.guru==g.id);let avg=a.length?a.reduce((s,h)=>s+h.nilai,0)/a.length:0;return [g,a.length,avg?Math.round(avg*100)/100:0,avg?category(avg):'Belum dinilai']});rekapTable.innerHTML=`<table><thead><tr><th>No</th><th>Guru</th><th>Jumlah Supervisi</th><th>Rata-rata</th><th>Kategori</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r[0].nama)}</td><td>${r[1]}</td><td>${r[2]||'-'}</td><td>${r[3]}</td></tr>`).join('')}</tbody></table>`}
+function renderReport(){let h=[...db.hasil].sort((a,b)=>b.tanggal.localeCompare(a.tanggal));reportBody.innerHTML=h.length?`<table><thead><tr><th>No</th><th>Guru</th><th>Tanggal</th><th>Nilai</th><th>Kategori</th><th>Catatan</th></tr></thead><tbody>${h.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(guruName(x.guru))}</td><td>${x.tanggal}</td><td>${x.nilai}</td><td>${x.kategori}</td><td>${esc(x.catatan)}</td></tr>`).join('')}</tbody></table><br><p><b>Catatan:</b> Nilai = (total skor diperoleh / skor maksimum) × 100. Instrumen menggunakan 13 indikator dengan skala 1–4.</p><br><div style="display:flex;justify-content:space-between;text-align:center"><div>Kepala Sekolah<br><br><br><b>Eka Bhakti Sriwayono, S.Pd.</b></div><div>Supervisor<br><br><br><b>________________________</b></div></div>`:'<div class="empty">Belum ada data untuk laporan.</div>'}
+function renderAll(){sGuru.textContent=db.guru.length;sJadwal.textContent=db.jadwal.length;sHasil.textContent=db.hasil.length;sAvg.textContent=db.hasil.length?Math.round(db.hasil.reduce((a,h)=>a+h.nilai,0)/db.hasil.length*100)/100:0;renderGuru();renderJadwal();renderHasil();renderRekap();renderReport();latest.innerHTML=db.hasil.length?[...db.hasil].reverse().slice(0,5).map(h=>`<p><b>${esc(guruName(h.guru))}</b> — ${h.nilai} (${h.kategori}) <small>${h.tanggal}</small></p>`).join(''):'<div class="empty">Belum ada hasil supervisi.</div>'}
+
+function normHeader(v){return String(v??'').trim().toLowerCase().replace(/[\/_\-]+/g,' ').replace(/\s+/g,' ');}
+function pick(row,names){
+  const keys=Object.keys(row), wanted=names.map(normHeader);
+  for(const k of keys) if(wanted.includes(normHeader(k))) return row[k];
+  return '';
+}
+function parseExcelDate(v){
+  if(v instanceof Date) return v.toISOString().slice(0,10);
+  if(typeof v==='number' && window.XLSX && XLSX.SSF){
+    const d=XLSX.SSF.parse_date_code(v);
+    if(d) return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+  }
+  const s=String(v??'').trim(); if(!s)return '';
+  let m=s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  if(m)return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if(m)return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  const d=new Date(s); return isNaN(d)?'':d.toISOString().slice(0,10);
+}
+function parseExcelTime(v){
+  if(typeof v==='number'){const t=Math.round(v*24*60);return `${String(Math.floor(t/60)%24).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;}
+  const s=String(v??'').trim(),m=s.match(/(\d{1,2}):(\d{2})/); return m?`${String(m[1]).padStart(2,'0')}:${m[2]}`:s;
+}
+function indicatorScore(row,i){
+  const v=pick(row,[`Skor ${i+1}`,`Score ${i+1}`,`Indikator ${i+1}`,`I${i+1}`,indicators[i][1]]);
+  if(v!=='')return Number(String(v).replace(',','.'));
+  const keys=Object.keys(row); return keys.length>=3+indicators.length?Number(String(row[keys[3+i]]).replace(',','.')):NaN;
+}
+function uploadExcel(type,input){
+  const file=input.files?.[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      if(!window.XLSX)throw new Error('Modul Excel belum termuat. Pastikan perangkat terhubung ke internet.');
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:'',raw:true});
+      if(!rows.length)throw new Error('File Excel tidak memiliki data.');
+      let added=0,skipped=0,notes=[];
+      rows.forEach((r,idx)=>{
+        if(type==='guru'){
+          const nama=String(pick(r,['Nama','Nama Guru','Guru'])).trim(),nip=String(pick(r,['NIP/NUPTK','NIP','NUPTK'])).trim(),mapel=String(pick(r,['Mapel','Mata Pelajaran'])).trim(),kelas=String(pick(r,['Kelas'])).trim();
+          if(!nama||!mapel){skipped++;notes.push(`Baris ${idx+2}: Nama dan Mapel wajib.`);return;}
+          db.guru.push({id:Date.now()+added,nama,nip,mapel,kelas});added++;
+        }else if(type==='jadwal'){
+          const nama=String(pick(r,['Guru','Nama Guru'])).trim(),guru=db.guru.find(g=>normHeader(g.nama)===normHeader(nama)),tanggal=parseExcelDate(pick(r,['Tanggal','Tanggal Supervisi','Tanggal Observasi'])),jam=parseExcelTime(pick(r,['Jam','Waktu'])),kelas=String(pick(r,['Kelas'])).trim(),materi=String(pick(r,['Materi/Topik','Materi','Topik'])).trim(),status=String(pick(r,['Status'])).trim()||'Terjadwal';
+          if(!guru){skipped++;notes.push(`Baris ${idx+2}: Guru "${nama}" tidak ditemukan.`);return;}
+          if(!tanggal){skipped++;notes.push(`Baris ${idx+2}: Tanggal tidak valid.`);return;}
+          db.jadwal.push({id:Date.now()+added,guru:guru.id,tanggal,jam,kelas,materi,status});added++;
+        }else{
+          const nama=String(pick(r,['Guru','Nama Guru'])).trim(),guru=db.guru.find(g=>normHeader(g.nama)===normHeader(nama)),tanggal=parseExcelDate(pick(r,['Tanggal','Tanggal Observasi'])),catatan=String(pick(r,['Catatan','Catatan / Temuan','Temuan'])).trim(),scores=indicators.map((_,i)=>indicatorScore(r,i));
+          if(!guru){skipped++;notes.push(`Baris ${idx+2}: Guru "${nama}" tidak ditemukan.`);return;}
+          if(!tanggal||scores.some(s=>![1,2,3,4].includes(s))){skipped++;notes.push(`Baris ${idx+2}: Tanggal/skor indikator tidak lengkap atau tidak valid.`);return;}
+          const nilai=Math.round((scores.reduce((a,b)=>a+b,0)/scores.length)*25*100)/100;
+          db.hasil.push({id:Date.now()+added,guru:guru.id,tanggal,scores,nilai,kategori:category(nilai),catatan});
+          const j=db.jadwal.find(x=>x.guru==guru.id&&x.tanggal==tanggal);if(j)j.status='Selesai';added++;
+        }
+      });
+      save();input.value='';
+      let msg=`Upload selesai.\n${added} baris berhasil dimasukkan.`;
+      if(skipped)msg+=`\n${skipped} baris dilewati.`;
+      if(notes.length)msg+=`\n\nDetail (maks. 10):\n`+notes.slice(0,10).join('\n');
+      alert(msg);
+    }catch(err){input.value='';alert('Gagal membaca file Excel: '+err.message);}
+  };
+  reader.readAsArrayBuffer(file);
+}
+function downloadTemplate(type){
+  if(!window.XLSX)return alert('Modul Excel belum termuat.');
+  let headers=type==='guru'?['Nama','NIP/NUPTK','Mapel','Kelas']:type==='jadwal'?['Guru','Tanggal','Jam','Kelas','Materi/Topik','Status']:['Guru','Tanggal','Catatan',...indicators.map((x,i)=>`Skor ${i+1}`)];
+  const ws=XLSX.utils.aoa_to_sheet([headers]),wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Template');XLSX.writeFile(wb,`template_${type}_supervisi.xlsx`);
+}
+function exportCSV(type){let arr=db[type];if(!arr.length)return alert('Tidak ada data.');let rows=type==='guru'?[['Nama','NIP/NUPTK','Mapel','Kelas'],...arr.map(x=>[x.nama,x.nip,x.mapel,x.kelas])]:[['Tanggal','Guru','Nilai','Kategori','Catatan'],...arr.map(x=>[x.tanggal,guruName(x.guru),x.nilai,x.kategori,x.catatan])];let csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`${type}_supervisi.csv`;a.click()}
+function backup(){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));a.download='backup_supervisi_smas_islam_lumajang.json';a.click()}
+function printReport(){document.querySelectorAll('.section').forEach(x=>x.classList.remove('printable'));document.getElementById('laporan').classList.add('printable');window.print();document.getElementById('laporan').classList.remove('printable');document.getElementById('laporan').classList.add('active')}
+document.getElementById('instrumentRows').innerHTML=indicators.map((x,i)=>`<tr><td><b>${x[0]}</b><br>${x[1]}</td><td>Skor 1–4</td></tr>`).join('');
+renderAll();
+</script>
+</body>
+</html>
